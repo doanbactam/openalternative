@@ -25,8 +25,8 @@ const nextConfig: NextConfig = {
   },
 
   async rewrites() {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    const posthogUrl = process.env.NEXT_PUBLIC_POSTHOG_HOST
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://openalternative-ecru.vercel.app";
+    const posthogUrl = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://https://us.i.posthog.com";
 
     return [
       // RSS rewrites
