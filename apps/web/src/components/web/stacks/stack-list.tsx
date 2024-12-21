@@ -50,10 +50,14 @@ const StackList = ({ stacks, className, ...props }: StackListProps) => {
     ).sort(([a], [b]) => stackTypeOrder.indexOf(a) - stackTypeOrder.indexOf(b))
   }, [stacks])
 
+  if (!stacks.length) {
+    return <EmptyList>No tech stack found for this project. We're working on it!</EmptyList>
+  }
+
   return (
     <div
       className={cx(
-        "flex flex-col divide-y divide-foreground/10 overflow-clip border-y border-foreground/10",
+        "w-full flex flex-col divide-y divide-foreground/10 overflow-clip border-y border-foreground/10",
         className,
       )}
       {...props}
@@ -79,8 +83,6 @@ const StackList = ({ stacks, className, ...props }: StackListProps) => {
           </div>
         </Fragment>
       ))}
-
-      {!stacks.length && <EmptyList>No stacks found.</EmptyList>}
     </div>
   )
 }

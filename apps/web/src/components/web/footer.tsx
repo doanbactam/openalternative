@@ -15,8 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/web/ui/dropdown-menu"
-import { Logo } from "~/components/web/ui/logo"
-import { NavigationLink } from "~/components/web/ui/navigation-link"
+import { NavLink } from "~/components/web/ui/nav-link"
 import { Tooltip, TooltipProvider } from "~/components/web/ui/tooltip"
 import { config } from "~/config"
 import { cx } from "~/utils/cva"
@@ -36,32 +35,22 @@ export const Footer = ({ children, className, hideNewsletter, ...props }: Footer
         )}
         {...props}
       >
-        <div className="flex flex-col items-start gap-4 col-span-full md:col-span-6">
-          {hideNewsletter ? (
-            <Stack direction="column" className="text-sm/normal">
-              <Stack size="sm" className="group/link" asChild>
-                <Link href="/" prefetch={false}>
-                  <Logo className="size-5 shrink-0" />
-                  <span className="font-display font-medium text-sm">{config.site.name}</span>
-                </Link>
-              </Stack>
+        <Stack
+          direction="column"
+          className="flex flex-col items-start gap-4 col-span-full md:col-span-6"
+        >
+          <Stack size="lg" direction="column" className="min-w-0 max-w-64">
+            <H5 as="strong" className="px-0.5 font-medium">
+              Subscribe to our newsletter
+            </H5>
 
-              <p className="text-foreground/65 max-w-80">{config.site.description}</p>
-            </Stack>
-          ) : (
-            <Stack size="lg" direction="column" className="min-w-0 max-w-64">
-              <H5 as="strong" className="px-0.5 font-medium">
-                Subscribe to our newsletter
-              </H5>
+            <p className="-mt-2 px-0.5 text-sm text-muted first:mt-0">
+              Join {formatNumber(config.stats.subscribers, "standard")}+ other members and get
+              updates on new open source tools.
+            </p>
 
-              <p className="-mt-2 px-0.5 text-sm text-muted first:mt-0">
-                Join {formatNumber(config.stats.subscribers, "standard")}+ other members and get
-                updates on new open source tools.
-              </p>
-
-              <NewsletterForm medium="footer_form" />
-            </Stack>
-          )}
+            <NewsletterForm medium="footer_form" />
+          </Stack>
 
           <Stack className="text-sm/normal">
             <TooltipProvider delayDuration={500} disableHoverableContent>
@@ -84,97 +73,84 @@ export const Footer = ({ children, className, hideNewsletter, ...props }: Footer
               </DropdownMenu>
 
               <Tooltip tooltip="Contact us">
-                <NavigationLink
+                <NavLink
                   href={`mailto:${config.site.email}`}
                   target="_blank"
                   rel="nofollow noreferrer"
                   aria-label="Contact us"
                 >
                   <AtSignIcon className="size-[1.44em] stroke-[1.25]" />
-                </NavigationLink>
+                </NavLink>
               </Tooltip>
 
               <Tooltip tooltip="Follow us on X/Twitter">
-                <NavigationLink
-                  href={config.links.twitter}
-                  target="_blank"
-                  rel="nofollow noreferrer"
-                >
+                <NavLink href={config.links.twitter} target="_blank" rel="nofollow noreferrer">
                   <BrandXIcon className="size-[1.44em] stroke-[1.25]" />
-                </NavigationLink>
+                </NavLink>
               </Tooltip>
 
               <Tooltip tooltip="Follow us on Bluesky">
-                <NavigationLink
-                  href={config.links.bluesky}
-                  target="_blank"
-                  rel="nofollow noreferrer"
-                >
+                <NavLink href={config.links.bluesky} target="_blank" rel="nofollow noreferrer">
                   <BrandBlueskyIcon className="size-[1.44em] stroke-[1.25]" />
-                </NavigationLink>
+                </NavLink>
               </Tooltip>
 
               <Tooltip tooltip="Follow us on LinkedIn">
-                <NavigationLink
-                  href={config.links.linkedin}
-                  target="_blank"
-                  rel="nofollow noreferrer"
-                >
+                <NavLink href={config.links.linkedin} target="_blank" rel="nofollow noreferrer">
                   <BrandLinkedInIcon className="size-[1.44em] stroke-[1.25]" />
-                </NavigationLink>
+                </NavLink>
               </Tooltip>
 
               <Tooltip tooltip="View source code">
-                <NavigationLink
-                  href={config.links.github}
-                  target="_blank"
-                  rel="nofollow noreferrer"
-                >
+                <NavLink href={config.links.github} target="_blank" rel="nofollow noreferrer">
                   <BrandGitHubIcon className="size-[1.44em] stroke-[1.25]" />
-                </NavigationLink>
+                </NavLink>
               </Tooltip>
             </TooltipProvider>
           </Stack>
-        </div>
+        </Stack>
 
-        <Stack className="gap-x-4 text-sm/normal flex-col items-start md:col-span-3 md:col-start-8">
+        <Stack direction="column" className="text-sm/normal md:col-span-3 md:col-start-8">
           <H6 as="strong">Browse:</H6>
 
-          <NavigationLink href="/alternatives">Alternatives</NavigationLink>
-          <NavigationLink href="/categories">Categories</NavigationLink>
-          <NavigationLink href="/stacks">Tech Stacks</NavigationLink>
-          <NavigationLink href="/topics">Topics</NavigationLink>
-          <NavigationLink href="/licenses">Licenses</NavigationLink>
+          <NavLink href="/alternatives">Alternatives</NavLink>
+          <NavLink href="/categories">Categories</NavLink>
+          <NavLink href="/stacks">Tech Stacks</NavLink>
+          <NavLink href="/topics">Topics</NavLink>
+          <NavLink href="/licenses">Licenses</NavLink>
         </Stack>
 
-        <Stack className="gap-x-4 text-sm/normal flex-col items-start md:col-span-3">
+        <Stack direction="column" className="text-sm/normal md:col-span-3">
           <H6 as="strong">Quick Links:</H6>
 
-          <NavigationLink href="/advertise">Advertise with Us</NavigationLink>
-          <NavigationLink href="/submit">Add a Free Listing</NavigationLink>
-          <NavigationLink href="/about">About Us</NavigationLink>
-          <NavigationLink href="/blog">Blog</NavigationLink>
+          <NavLink href="/about">About Us</NavLink>
+          <NavLink href="/blog">Blog</NavLink>
+          <NavLink href="/advertise">Advertise</NavLink>
+          <NavLink href="/submit">Add a Free Listing</NavLink>
+          <NavLink href="/tools/github-stack-analyzer">Stack Analyzer</NavLink>
         </Stack>
 
-        <Stack className="gap-x-4 text-sm/normal flex-col items-start md:col-span-3">
-          <H6 as="strong">Other Products:</H6>
+        <Stack direction="column" className="text-sm/normal md:col-span-3">
+          <Stack direction="column">
+            <H6 as="strong">Other Products:</H6>
 
-          {config.links.family.map(({ href, title, description }) => (
-            <NavigationLink
-              key={href}
-              href={updateUrlWithSearchParams(href, { ref: config.site.name.toLowerCase() })}
-              target="_blank"
-              rel="noreferrer noopener"
-              title={description}
-            >
-              {title}
-            </NavigationLink>
-          ))}
+            {config.links.family.map(({ href, title, description }) => (
+              <NavLink
+                key={href}
+                href={updateUrlWithSearchParams(href, { ref: config.site.name.toLowerCase() })}
+                target="_blank"
+                rel="noreferrer noopener"
+                title={description}
+              >
+                {title}
+              </NavLink>
+            ))}
+          </Stack>
         </Stack>
       </div>
 
       <div className="flex flex-row flex-wrap items-end justify-between gap-x-4 gap-y-2 w-full">
-        <NavigationLink
+        <NavLink
           href={config.links.author}
           className="text-xs"
           target="_blank"
@@ -190,7 +166,7 @@ export const Footer = ({ children, className, hideNewsletter, ...props }: Footer
             className="max-sm:hidden size-4 rounded-full"
           />
           Made by Piotr Kulpinski
-        </NavigationLink>
+        </NavLink>
 
         <p className="text-xs text-muted">This website may contain affiliate links</p>
       </div>

@@ -1,66 +1,82 @@
 import { execFileSync } from "node:child_process"
 import path from "node:path"
+import { createGithubClient, getRepositoryString } from "@openalternative/github"
 import type { AnalyserJson } from "@specfy/stack-analyser"
 import fs from "fs-extra"
-import { getRepoOwnerAndName } from "./utils"
+import { env } from "./env"
 
-const getRepoInfo = (repository: string) => {
-  const repo = getRepoOwnerAndName(repository)
-  if (!repo) throw new Error("Invalid repository")
+const { GITHUB_TOKEN } = env()
 
-  const repoDir = path.join(process.cwd(), ".repositories", repo.owner, repo.name)
-  const repoUrl = `${repo.owner}/${repo.name}`
+const getRepoInfo = (url: string) => {
+  const repo = getRepositoryString(url)
 
-  return { repoDir, repoUrl }
+  const repoDir = path.join(process.cwd(), ".repositories", repo)
+  const outputFile = path.join(`output-${repo.replace("/", "-")}.json`)
+
+  return { repo, repoDir, outputFile }
 }
 
-const cloneRepository = async (repoUrl: string, repoDir: string) => {
-  console.time("Clone repository")
+const cloneRepository = async (repo: string, repoDir: string) => {
+  console.time("Cloning repository")
+
   try {
     fs.ensureDirSync(repoDir)
-    execFileSync("bun", ["x", "degit", repoUrl, repoDir, "-f"])
-    console.timeEnd("Clone repository")
+    // execFileSync("bun", ["x", "tiged", `${repo}`, repoDir, "-f"])
+    execFileSync("bun", ["x", "degit", `${repo}`, repoDir, "-f"])
   } catch (error) {
-    console.error(`Error cloning ${repoUrl}:`, error)
-    throw error
+    console.error(`Error cloning ${repo}:`, error)
+    throw new Error(`Error cloning ${repo}`)
+  } finally {
+    console.timeEnd("Cloning repository")
   }
 }
 
-const analyzeStack = async (repoUrl: string, repoDir: string) => {
-  console.time("Analyze stack")
+const analyzeStack = async (repo: string, repoDir: string, outputFile: string) => {
+  console.time("Analyzing stack")
+
   try {
-    const outputFile = path.join(repoDir, "output.json")
     execFileSync("bun", ["x", "@specfy/stack-analyser", repoDir, "--flat", "-o", outputFile])
     const output = fs.readFileSync(outputFile, "utf-8")
-    console.timeEnd("Analyze stack")
     return JSON.parse(output) as AnalyserJson
   } catch (error) {
-    console.error(`Error analyzing stack for ${repoUrl}:`, error)
-    throw error
-  }
-}
-
-const cleanupDirectory = async (repoUrl: string, repoDir: string) => {
-  console.time("Cleanup directory")
-  try {
-    await fs.remove(repoDir)
-    console.timeEnd("Cleanup directory")
-  } catch (error) {
-    console.error(`Cleanup error for ${repoUrl}:`, error)
-    throw error
-  }
-}
-
-export const processRepository = async (repository: string) => {
-  const { repoDir, repoUrl } = getRepoInfo(repository)
-
-  try {
-    await cloneRepository(repoUrl, repoDir)
-    return await analyzeStack(repoUrl, repoDir)
-  } catch (error) {
-    console.error(`Error processing ${repoUrl}:`, error)
+    console.error(`Error analyzing stack for ${repo}:`, error)
     throw error
   } finally {
-    await cleanupDirectory(repoUrl, repoDir).catch(() => {})
+    console.timeEnd("Analyzing stack")
+  }
+}
+
+const cleanupDirectories = async (repo: string, repoDir: string, outputFile: string) => {
+  console.time("Cleaning up directories")
+
+  try {
+    await fs.remove(repoDir)
+    await fs.remove(outputFile)
+  } catch (error) {
+    console.error(`Cleanup error for ${repo}:`, error)
+    throw error
+  } finally {
+    console.timeEnd("Cleaning up directories")
+  }
+}
+
+export const analyzeRepositoryStack = async (url: string) => {
+  const { repo, repoDir, outputFile } = getRepoInfo(url)
+  const githubClient = createGithubClient(GITHUB_TOKEN)
+
+  try {
+    await cloneRepository(repo, repoDir)
+
+    const [{ childs }, repository] = await Promise.all([
+      // Get analysis
+      analyzeStack(repo, repoDir, outputFile),
+
+      // Get repository
+      githubClient.queryRepository(repo),
+    ])
+
+    return { stack: [...new Set(childs.flatMap(({ techs }) => techs))], repository }
+  } finally {
+    await cleanupDirectories(repo, repoDir, outputFile).catch(() => {})
   }
 }

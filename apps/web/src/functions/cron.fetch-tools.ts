@@ -1,5 +1,6 @@
 import { prisma } from "@openalternative/db"
 import { ToolStatus } from "@openalternative/db/client"
+import { NonRetriableError } from "inngest"
 import { revalidateTag } from "next/cache"
 import { getMilestoneReached } from "~/lib/milestones"
 import { getToolRepositoryData } from "~/lib/repositories"
@@ -14,15 +15,15 @@ export const fetchTools = inngest.createFunction(
 
   async ({ step, logger }) => {
     const tools = await step.run("fetch-tools", async () => {
-      return prisma.tool.findMany({
+      return await prisma.tool.findMany({
         where: { status: { in: [ToolStatus.Published, ToolStatus.Scheduled] } },
       })
     })
 
     await step.run("fetch-repository-data", async () => {
-      return Promise.all(
+      return await Promise.all(
         tools.map(async tool => {
-          const updatedTool = await getToolRepositoryData(tool)
+          const updatedTool = await getToolRepositoryData(tool.repository)
           logger.info(`Updated tool data for ${tool.name}`, { updatedTool })
 
           if (!updatedTool) {
@@ -34,7 +35,10 @@ export const fetchTools = inngest.createFunction(
 
             if (milestone) {
               const template = getPostMilestoneTemplate(tool, milestone)
-              await sendSocialPost(template, tool)
+
+              await sendSocialPost(template, tool).catch(err => {
+                throw new NonRetriableError(err.message)
+              })
             }
           }
 
@@ -52,13 +56,16 @@ export const fetchTools = inngest.createFunction(
 
       if (tool) {
         const template = await getPostTemplate(tool)
-        return sendSocialPost(template, tool)
+
+        return await sendSocialPost(template, tool).catch(err => {
+          throw new NonRetriableError(err.message)
+        })
       }
     })
 
     // Disconnect from DB
     await step.run("disconnect-from-db", async () => {
-      return prisma.$disconnect()
+      return await prisma.$disconnect()
     })
 
     // Revalidate cache
